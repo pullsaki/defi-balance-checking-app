@@ -1,8 +1,8 @@
 
 # Balance Checker
-This Web app checks token balance from given externally owned addresses accoss different chains.
+This Web app checks token balance from given externally owned addresses across different chains.
 
-It internally takes the help of Infura's API to access the info on a given chain. Currently, this app only works for Linea chain but it is extensible to add more chains
+It internally accesses the network by the RPC url for each chain to retrieve the balance
 
 ## How to Run
 
@@ -19,11 +19,9 @@ It internally takes the help of Infura's API to access the info on a given chain
    ``` cd defi-balance-checking-app ```
 
 3. Install dependencies:
-```npm install``` and ```npm install web3 axios```
+```npm install``` and ```npm install ethers ethers-react```
 
-4. Replace the `INFURA_API_KEY` and `ETHEREUM_ADDRESS` variables in `src/App.js` with your Infura API key and the Ethereum address for which you want to check the balance.
-
-5. Start the application:
+4. Start the application:
 
    ```npm start``` 
 
@@ -32,7 +30,7 @@ It internally takes the help of Infura's API to access the info on a given chain
 ## Code Overview
 
 ### `src/App.js`
-Main App Component which launches other components
+Main App Component which launches a component for each chain
 
 ### `src/ChainDataRow.js`
 This component contains the logic to find out the balance, percentage change and updates regularly
