@@ -97,14 +97,20 @@ const ChainDataRow = ({ rpcUrl, chainName, address, refreshInterval }) => {
     // JSX rendering of the component
     return (
         <div className="chain-data-row">
-            <ChainName chainName={chainName} />
-            <div className="data-info">
+            <div className="left-section">
+                <ChainName chainName={chainName} />
+            </div>
+            {notificationMessage && (
+                <div className="center-section">
+                    <Notification message={notificationMessage} />
+                </div>
+            )}
+            <div className="right-section">
                 <div className="balance-and-change">
                     <Balance balance={balance} />
                     <ChangePercentage percentageChange={percentageChange} />
                 </div>
             </div>
-            {notificationMessage && <Notification message={notificationMessage} />}
         </div>
     );
 };
