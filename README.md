@@ -1,6 +1,6 @@
 
-# Balance Tracker
-This Web app tracks token balance from given externally owned addresses accoss different chains.
+# Balance Checker
+This Web app checks token balance from given externally owned addresses accoss different chains.
 
 It internally takes the help of Infura's API to access the info on a given chain. Currently, this app only works for Linea chain but it is extensible to add more chains
 
@@ -29,7 +29,7 @@ It internally takes the help of Infura's API to access the info on a given chain
 
    The app will be accessible at [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Code Explanation
+## Code Overview
 
 ### `src/App.js`
 Main App Component which launches other components
