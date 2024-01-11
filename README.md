@@ -1,7 +1,8 @@
 
-# Crypto Balance Dashboard
+# Balance Tracker
+This Web app tracks token balance from given externally owned addresses accoss different chains.
 
-The Crypto Balance Dashboard is a React web application that fetches and displays the Ethereum balance of a specified address on the Linea chain. It also calculates and shows the percentage change in balance over the last 12 hours. If the balance has reduced by 10% or more in the last 12 hours, the user is notified with an alert.
+It internally takes the help of Infura's API to access the info on a given chain. Currently, this app only works for Linea chain but it is extensible to add more chains
 
 ## How to Run
 
@@ -11,16 +12,14 @@ The Crypto Balance Dashboard is a React web application that fetches and display
 
 ### Steps
 
-1. Clone the repository:
+1. Clone the repository
 
-   ``` git clone https://github.com/your-username/crypto-balance-dashboard.git```
-2. Navigate to the project directory:
+2. Navigate to the project directory
 
-   ``` cd crypto-balance-dashboard ```
+   ``` cd defi-balance-checking-app ```
 
 3. Install dependencies:
-
-   ```npm install```
+```npm install``` and ```npm install web3 axios```
 
 4. Replace the `INFURA_API_KEY` and `ETHEREUM_ADDRESS` variables in `src/App.js` with your Infura API key and the Ethereum address for which you want to check the balance.
 
@@ -33,7 +32,9 @@ The Crypto Balance Dashboard is a React web application that fetches and display
 ## Code Explanation
 
 ### `src/App.js`
+Main App Component which launches other components
 
-- **Dependencies:**
-  - React: The JavaScript library for building user interfaces.
-  - Web3: A library
+### `src/ChainDataRow.js`
+This component contains the logic to find out the balance, percentage change and updates regularly
+
+This file also contains different UI components used to display individual components

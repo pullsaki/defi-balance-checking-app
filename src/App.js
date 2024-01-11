@@ -8,9 +8,8 @@ const App = () => {
 
   return (
       <div className="crypto-app">
-        <h1>Eth Balance Tracker</h1>
-        <ChainDataRow apiKey={apiKey} chainName="Linea" address={lineaAddress} refreshInterval={5 * 60 * 1000} />
-        {/* Add more ChainDataRow instances for other chains if needed */}
+        <h1>Ethereum Balance Tracker</h1>
+        <ChainDataRow apiKey={apiKey} baseUrl={"https://linea-mainnet.infura.io/v3/"} chainName="Linea" address={lineaAddress} refreshInterval={5 * 60 * 1000} />
       </div>
   );
 };

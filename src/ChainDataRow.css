@@ -14,11 +14,13 @@
     }
 }
 
-/*.data-info {*/
-/*    flex: 1;*/
-/*    display: flex;*/
-/*    flex-direction: column;*/
-/*}*/
+.positive {
+    color: #4caf50; /* Green color for positive change */
+}
+
+.negative {
+    color: #e44d26; /* Red color for negative change */
+}
 
 .data-info {
     flex: 1;

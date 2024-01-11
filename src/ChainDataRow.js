@@ -1,36 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import Web3 from 'web3';
 import './ChainDataRow.css';
 
-const ChainDataRow = ({ apiKey, chainName, address, refreshInterval }) => {
+const ChainDataRow = ({ apiKey, baseUrl, chainName, address, refreshInterval }) => {
     const [balance, setBalance] = useState(null);
     const [percentageChange, setPercentageChange] = useState(null);
     const [notificationMessage, setNotificationMessage] = useState('');
 
-    useEffect(() => {
-        const web3 = new Web3(`https://${chainName}-mainnet.infura.io/v3/${apiKey}`);
+    const hasMounted = useRef(false);
+    const fetchData = async (web3) => {
+        try {
+            const currentBalance = await getBalance(web3, address);
+            const historicalBalance = await getHistoricalBalance(web3, address, 12 * 3600);
+            const changePercentage = calculatePercentageChange(currentBalance, historicalBalance);
 
-        const fetchData = async () => {
-            try {
-                const currentBalance = await getBalance(web3, address);
-                const historicalBalance = await getHistoricalBalance(web3, address, 12 * 3600);
-                const changePercentage = calculatePercentageChange(currentBalance, historicalBalance);
+            setBalance(currentBalance);
+            setPercentageChange(changePercentage.toFixed(2));
 
-                setBalance(currentBalance);
-                setPercentageChange(changePercentage.toFixed(2));
-
-                if (changePercentage < -10) {
-                    setNotificationMessage(`Your ${chainName} balance has reduced by more than 10% in the last 12 hours!`);
-                } else {
-                    setNotificationMessage('');
-                }
-            } catch (error) {
-                console.error(`Error fetching ${chainName} balance:`, error);
+            if (changePercentage < -10) {
+                setNotificationMessage(`Your ${chainName} balance has reduced by more than 10% in the last 12 hours!`);
+                alert(`Your ${chainName} balance has reduced by more than 10% in the last 12 hours!`);
+            } else {
+                setNotificationMessage('');
             }
-        };
+        } catch (error) {
+            console.error(`Error fetching ${chainName} balance:`, error);
+        }
+    };
 
-        fetchData();
-        const intervalId = setInterval(fetchData, refreshInterval);
+    useEffect(() => {
+        const web3 = new Web3(`${baseUrl}${apiKey}`);
+
+        if (!hasMounted.current) {
+            fetchData(web3);
+            hasMounted.current = true;
+        }
+
+        const intervalId = setInterval(() => fetchData(web3), 5 * 60 * 100);
 
         return () => clearInterval(intervalId);
     }, [apiKey, chainName, address, refreshInterval]);
