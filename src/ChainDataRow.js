@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { formatEther, JsonRpcProvider } from 'ethers';
+import React, {useEffect, useRef, useState} from 'react';
+import {formatEther, JsonRpcProvider} from 'ethers';
 import './ChainDataRow.css';
 
 const ChainDataRow = ({ rpcUrl, chainName, address, refreshInterval }) => {
@@ -64,25 +64,30 @@ const ChainDataRow = ({ rpcUrl, chainName, address, refreshInterval }) => {
     const getHistoricalBalance = async (provider, address, timeInSeconds) => {
         const currentBlockNumber = await provider.getBlockNumber();
 
-        // Fetching multiple past blocks to calculate the average time per block
-        const blockPromises = [];
-        for (let i = 0; i <= 10; i++) {
-            blockPromises.push(provider.getBlock(currentBlockNumber - i));
-        }
-        const blocks = await Promise.all(blockPromises);
-
         // Calculate average time per block
-        const timeDifferences = blocks.slice(1).map((block, index) => blocks[index].timestamp - block.timestamp);
-        const averageTimePerBlock = timeDifferences.reduce((a, b) => a + b, 0) / timeDifferences.length;
+        const averageTimePerBlock = await calculateAverageTimePerBlock(provider);
 
         // Calculate the block number approximately 'timeInSeconds' seconds ago
-        const blocksAgo = Math.floor(timeInSeconds / averageTimePerBlock);
+        const blocksAgo = Math.floor(timeInSeconds/averageTimePerBlock);
         const pastBlockNumber = currentBlockNumber - blocksAgo;
 
         // Get balance at that block number
         const pastBalance = await provider.getBalance(address, pastBlockNumber);
         return Number(formatEther(pastBalance));
     };
+
+    // Function to get average time per block
+    async function calculateAverageTimePerBlock(provider) {
+        // Fetch the 100 blocks past to calculate average time per block
+        const currentBlockNumber = await provider.getBlockNumber();
+        const startBlockNumber = currentBlockNumber - 100;
+
+        const currentBlock = await provider.getBlock(currentBlockNumber);
+        const startBlock = await provider.getBlock(startBlockNumber);
+
+        const timeDifferenceInSeconds = currentBlock.timestamp - startBlock.timestamp;
+        return timeDifferenceInSeconds / 100.0;
+    }
 
     // Function to calculate the percentage change in balance
     const calculatePercentageChange = (currentBalance, historicalBalance) => {
