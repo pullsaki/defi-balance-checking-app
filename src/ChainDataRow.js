@@ -1,24 +1,33 @@
-import React, {useState, useEffect, useRef} from 'react';
-import Web3 from 'web3';
+import React, { useState, useEffect, useRef } from 'react';
+import { formatEther, JsonRpcProvider } from 'ethers';
 import './ChainDataRow.css';
 
-const ChainDataRow = ({ apiKey, baseUrl, chainName, address, refreshInterval }) => {
+const ChainDataRow = ({ rpcUrl, chainName, address, refreshInterval }) => {
     const [balance, setBalance] = useState(null);
     const [percentageChange, setPercentageChange] = useState(null);
     const [notificationMessage, setNotificationMessage] = useState('');
 
     const hasMounted = useRef(false);
-    const fetchData = async (web3) => {
+
+    // Function to fetch data from the blockchain
+    const fetchData = async (provider) => {
         try {
-            const currentBalance = await getBalance(web3, address);
-            const historicalBalance = await getHistoricalBalance(web3, address, 12 * 3600);
+            // Get current balance
+            const currentBalance = await getBalance(provider, address);
+
+            // Get historical balance 12 hours ago
+            const historicalBalance = await getHistoricalBalance(provider, address, 12 * 3600);
+
+            // Calculate percentage change
             const changePercentage = calculatePercentageChange(currentBalance, historicalBalance);
 
+            // Update state with fetched data
             setBalance(currentBalance);
             setPercentageChange(changePercentage.toFixed(2));
 
+            // Check if the balance has reduced by 10% and notify the user
             if (changePercentage < -10) {
-                setNotificationMessage(`Your ${chainName} balance has reduced by more than 10% in the last 12 hours!`);
+                setNotificationMessage(`Your ${chainName} balance fell by more than 10% during the past 12 hours!`);
                 alert(`Your ${chainName} balance has reduced by more than 10% in the last 12 hours!`);
             } else {
                 setNotificationMessage('');
@@ -29,41 +38,58 @@ const ChainDataRow = ({ apiKey, baseUrl, chainName, address, refreshInterval }) 
     };
 
     useEffect(() => {
-        const web3 = new Web3(`${baseUrl}${apiKey}`);
+        // Initialize JsonRpcProvider with the provided URL
+        const provider = new JsonRpcProvider(rpcUrl);
 
         if (!hasMounted.current) {
-            fetchData(web3);
+            // Fetch data on initial component mount
+            fetchData(provider);
             hasMounted.current = true;
         }
 
-        const intervalId = setInterval(() => fetchData(web3), 5 * 60 * 100);
+        // Set up interval to fetch data every refreshInterval milliseconds
+        const intervalId = setInterval(() => fetchData(provider), refreshInterval);
 
+        // Cleanup interval on component unmount
         return () => clearInterval(intervalId);
-    }, [apiKey, chainName, address, refreshInterval]);
+    }, [chainName, address, refreshInterval]);
 
-    const getBalance = async (web3, address) => {
-        const currentBalance = await web3.eth.getBalance(address);
-        return Number(web3.utils.fromWei(currentBalance, 'ether'));
+    // Function to get the current balance from the blockchain
+    const getBalance = async (provider, address) => {
+        const currentBalance = await provider.getBalance(address);
+        return Number(formatEther(currentBalance));
     };
 
-    const getHistoricalBalance = async (web3, address, timeInSeconds) => {
-        const currentBlockNumber = Number(await web3.eth.getBlockNumber());
-        const startBlockNumber = currentBlockNumber - 10;
-        const currentBlock = await web3.eth.getBlock(currentBlockNumber);
-        const startBlock = await web3.eth.getBlock(startBlockNumber);
-        const timeDifferenceInSeconds = Number(currentBlock.timestamp - startBlock.timestamp);
-        const averageTimePerBlock = timeDifferenceInSeconds / 10;
+    // Function to get the historical balance at a specific block number
+    const getHistoricalBalance = async (provider, address, timeInSeconds) => {
+        const currentBlockNumber = await provider.getBlockNumber();
+
+        // Fetching multiple past blocks to calculate the average time per block
+        const blockPromises = [];
+        for (let i = 0; i <= 10; i++) {
+            blockPromises.push(provider.getBlock(currentBlockNumber - i));
+        }
+        const blocks = await Promise.all(blockPromises);
+
+        // Calculate average time per block
+        const timeDifferences = blocks.slice(1).map((block, index) => blocks[index].timestamp - block.timestamp);
+        const averageTimePerBlock = timeDifferences.reduce((a, b) => a + b, 0) / timeDifferences.length;
+
+        // Calculate the block number approximately 'timeInSeconds' seconds ago
         const blocksAgo = Math.floor(timeInSeconds / averageTimePerBlock);
-        const historicalBlockNumber = currentBlockNumber - blocksAgo;
-        const historicalBalance = await web3.eth.getBalance(address, historicalBlockNumber);
+        const pastBlockNumber = currentBlockNumber - blocksAgo;
 
-        return Number(web3.utils.fromWei(historicalBalance, 'ether'));
+        // Get balance at that block number
+        const pastBalance = await provider.getBalance(address, pastBlockNumber);
+        return Number(formatEther(pastBalance));
     };
 
+    // Function to calculate the percentage change in balance
     const calculatePercentageChange = (currentBalance, historicalBalance) => {
         return ((currentBalance - historicalBalance) / historicalBalance) * 100;
     };
 
+    // JSX rendering of the component
     return (
         <div className="chain-data-row">
             <ChainName chainName={chainName} />
@@ -78,22 +104,26 @@ const ChainDataRow = ({ apiKey, baseUrl, chainName, address, refreshInterval }) 
     );
 };
 
+// Component to display the chain name
 const ChainName = ({ chainName }) => (
     <span className="chain-name">{chainName}</span>
 );
 
+// Component to display the current balance
 const Balance = ({ balance }) => (
     <p className="balance-info">
         {balance} ETH
     </p>
 );
 
+// Component to display the percentage change
 const ChangePercentage = ({ percentageChange }) => (
     <p className={`percentage-change ${percentageChange >= 0 ? 'positive' : 'negative'}`}>
         {percentageChange}%
     </p>
 );
 
+// Component to display notification message
 const Notification = ({ message }) => (
     <div className="notification">
         {message}
